@@ -222,9 +222,24 @@ static void adjustInitialFrequencies() {
   sceKernelResumeDispatchThread(state);
 }
 
+// to get motherboard version
+extern int GetHardwareInfo(u32 *ptachyon, u32 *pbaryon, u32 *ppommel, u32 *pmb, u64 *pfuseid);
+
+// check our motherboard
+static inline int get_psp_ta095(){
+  u32 tachyon, baryon, pommel, mb;
+  u64 fuseid;
+  if (GetHardwareInfo(&tachyon, &baryon, &pommel, &mb, &fuseid) != 0) return 0;
+
+  if (tachyon == 0x00810000 && baryon == 0x002E4000) return 1;  // TA-095v1
+  if (tachyon == 0x00820000)                         return 2;  // TA-095v2
+  return 0;
+}
+
+// 09g needs street values
 static void adjustValues(){
   extern int psp_model;
-  if (psp_model == PSP_STREET){
+  if (psp_model == PSP_STREET || get_psp_ta095()){
     pll_den           = PLL_DEN_STREET;
     pll_base_freq     = PLL_BASE_FREQ_STREET;
     pll_mul_msb       = PLL_MUL_MSB_STREET;
